@@ -1,0 +1,50 @@
+----
+schemaVersion: "2.2"
+description: Install CTE
+Parameters:
+  WindowsInstallS3:
+    type: String
+    description: " S3 URL used to download CTE exe file"
+    default: "<S3-location-to-exe-file>"
+mainSteps:
+  - action: aws:runPowerShellScript
+    name: Install CTE
+    precondition:
+      StringEquals:
+	  - platformType
+	  - Windows
+    inputs:
+	runCommand:
+	 - |
+	   $S3 = "{{WindowsInstallS3}}"
+	   $INSTALLER = "$($env:TEMP)\WindowsSensor.exe"
+	   $SERVICE_NAME = "CTE"
+
+	   if ( GET-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue ) { $install = $false } else { $install = $true }
+	   if ( $install ) {
+	     try {
+	       Write-Host "Downloading Exe file from $($S3)...."
+	       aws S3 cp $S3 $INSTALLER
+	     }
+	     catch {
+	       Write-Host "Unable to download file from S3 $($S3) exiting...."
+	       exit 1
+	     }
+	     try {
+	       Write-Host "Running Exe with $($INSTALLER)..."
+	       & $INSTALLER /install /qn registerhostopts"  -token=<> -enableldt -useip=144.15.17.39" /passive /norestart
+	     }
+	     catch {
+	       Write-Host " Problem encountered while running CTE exe file, exiting...."
+	       exit 1
+	     }
+    	   } else {
+	     Write-Host "CTE $($SERVICE_NAME) is already installed."
+	   }
+
+	   if ( GET-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue ) { exit 0 } else { exit 1 }
+
+	 - name: Restart Server
+	   Restart-Computer
+
+ 	
