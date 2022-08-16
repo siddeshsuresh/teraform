@@ -1,0 +1,3 @@
+Start-Process -Wait -FilePath "C:\Windows\Temp\vee-fs-7.2.0-167-win64" -ArgumentList "/silent", /v" -token=$token -enableldt ENABLE_LDT_CIFS=No -useip=144.15.17.39" -PassThru -NoNewWindow -RedirectStandardOutput test.txt
+
+
